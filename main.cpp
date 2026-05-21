@@ -6,7 +6,6 @@
 
 #pragma comment(linker, "/NODEFAULTLIB:LIBCMT")
 
-// --- Прокси функции (Экспорт оригинальной version.dll) ---
 #define PROXY_OUT(func) __pragma(comment(linker, "/export:" #func "=My" #func))
 PROXY_OUT(GetFileVersionInfoA) PROXY_OUT(GetFileVersionInfoByHandle) PROXY_OUT(GetFileVersionInfoExA) PROXY_OUT(GetFileVersionInfoExW) PROXY_OUT(GetFileVersionInfoSizeA) PROXY_OUT(GetFileVersionInfoSizeExA) PROXY_OUT(GetFileVersionInfoSizeExW) PROXY_OUT(GetFileVersionInfoSizeW) PROXY_OUT(GetFileVersionInfoW) PROXY_OUT(VerFindFileA) PROXY_OUT(VerFindFileW) PROXY_OUT(VerInstallFileA) PROXY_OUT(VerInstallFileW) PROXY_OUT(VerLanguageNameA) PROXY_OUT(VerLanguageNameW) PROXY_OUT(VerQueryValueA) PROXY_OUT(VerQueryValueW)
 
