@@ -1,3 +1,5 @@
+//v13 multiplayer
+
 #include <cstdio>
 #include <string>
 #include <iostream>
@@ -86,8 +88,8 @@ o_photon_hook_t o_photon_hook = nullptr;
 
 void __fastcall photon_hook(void* _appSettings, bool startInOfflineMode, void* mi) {
     if (_appSettings) {
-        WriteMem<uintptr_t>((uintptr_t)_appSettings + 0x10, (uintptr_t)il2cpp_string_new("")); //APPID
-        WriteMem<uintptr_t>((uintptr_t)_appSettings + 0x28, (uintptr_t)il2cpp_string_new("")); //APPIDVOICE
+        WriteMem<uintptr_t>((uintptr_t)_appSettings + 0x10, (uintptr_t)il2cpp_string_new("")); //your photon pun 2 appid
+        WriteMem<uintptr_t>((uintptr_t)_appSettings + 0x28, (uintptr_t)il2cpp_string_new("")); //your photon voice appid
     }
     return o_photon_hook(_appSettings, startInOfflineMode, mi);
 }
