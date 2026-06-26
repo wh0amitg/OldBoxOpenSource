@@ -50,9 +50,12 @@ extern "C" {
 }
 
 void SetupProxy() {
-    char sysPath[MAX_PATH]; GetSystemDirectoryA(sysPath, MAX_PATH);
+    char sysPath[MAX_PATH];
+    GetSystemDirectoryA(sysPath, MAX_PATH);
     HMODULE hReal = LoadLibraryA((std::string(sysPath) + "\\version.dll").c_str());
+
     if (!hReal) return;
+
     o_GetFileVersionInfoA = (decltype(o_GetFileVersionInfoA))GetProcAddress(hReal, "GetFileVersionInfoA");
     o_GetFileVersionInfoByHandle = (decltype(o_GetFileVersionInfoByHandle))GetProcAddress(hReal, "GetFileVersionInfoByHandle");
     o_GetFileVersionInfoExA = (decltype(o_GetFileVersionInfoExA))GetProcAddress(hReal, "GetFileVersionInfoExA");
@@ -76,32 +79,41 @@ uintptr_t GameAssembly = 0;
 uintptr_t offset_ConnectUsingSettings = 0x0; // Photon.Pun.PhotonNetwork$$ConnectUsingSettings
 
 struct Il2CppString { void* k; void* m; int32_t len; wchar_t chars[1]; };
-Il2CppString* (*il2cpp_string_new)(const char*) = nullptr;
 
-template <typename T> void WriteMem(uintptr_t addr, T val) {
-    DWORD old; VirtualProtect((LPVOID)addr, sizeof(T), PAGE_EXECUTE_READWRITE, &old);
-    *(T*)addr = val; VirtualProtect((LPVOID)addr, sizeof(T), old, &old);
+using il2cpp_string_new_t = Il2CppString * (*)(const char*);
+il2cpp_string_new_t il2cpp_string_new = nullptr;
+
+template <typename T>
+void WriteMem(uintptr_t addr, T val) {
+    DWORD old;
+    VirtualProtect((LPVOID)addr, sizeof(T), PAGE_EXECUTE_READWRITE, &old);
+    *(T*)addr = val;
+    VirtualProtect((LPVOID)addr, sizeof(T), old, &old);
 }
 
-typedef void(__fastcall* o_photon_hook_t)(void*, bool, void*);
+using o_photon_hook_t = void(*)(void*, bool, void*);
 o_photon_hook_t o_photon_hook = nullptr;
 
-void __fastcall photon_hook(void* _appSettings, bool startInOfflineMode, void* mi) {
-    if (_appSettings) {
-        WriteMem<uintptr_t>((uintptr_t)_appSettings + 0x10, (uintptr_t)il2cpp_string_new("")); //your photon pun 2 appid
-        WriteMem<uintptr_t>((uintptr_t)_appSettings + 0x28, (uintptr_t)il2cpp_string_new("")); //your photon voice appid
+void photon_hook(void* _appSettings, bool startInOfflineMode, void* mi) {
+    if (_appSettings && il2cpp_string_new != nullptr) {
+        WriteMem((uintptr_t)_appSettings + 0x10, il2cpp_string_new("")); // photon pun 2 appid
+        WriteMem((uintptr_t)_appSettings + 0x28, il2cpp_string_new("")); // voice appid
     }
     return o_photon_hook(_appSettings, startInOfflineMode, mi);
 }
 
 void Main() {
-    while (!(GameAssembly = (uintptr_t)GetModuleHandleA("GameAssembly.dll"))) Sleep(50);
+    while (!(GameAssembly = (uintptr_t)GetModuleHandleA("GameAssembly.dll"))) {
+        Sleep(200);
+    }
 
     HMODULE hGA = (HMODULE)GameAssembly;
-    il2cpp_string_new = (Il2CppString * (*)(const char*))GetProcAddress(hGA, "il2cpp_string_new");
-    MH_Initialize();  
+    il2cpp_string_new = (il2cpp_string_new_t)GetProcAddress(hGA, "il2cpp_string_new");
+
+    MH_Initialize();
 
     uintptr_t targetAddr = GameAssembly + offset_ConnectUsingSettings;
+
     if (MH_CreateHook((LPVOID)targetAddr, (LPVOID)&photon_hook, (LPVOID*)&o_photon_hook) == MH_OK) {
         MH_EnableHook((LPVOID)targetAddr);
     }
